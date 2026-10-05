@@ -1,33 +1,31 @@
-"""Точка входа приложения (этап 1: GUI-прототип)."""
+"""Точка входа приложения."""
 
 import os
 import sys
 
 from src.commands import Shell
+from src.config import parse_args
 from src.gui import MainWindow
 
 
-def _get_vfs_name(argv):
-    """Извлекает имя VFS из аргументов командной строки.
-
-    Ожидает форму: --vfs <путь>. Если параметр не указан — возвращает None.
-    """
-    if "--vfs" in argv:
-        idx = argv.index("--vfs")
-        if idx + 1 < len(argv):
-            path = argv[idx + 1]
-            return os.path.basename(os.path.abspath(path))
-    return None
+def _vfs_name_from_path(path):
+    """Извлекает имя VFS из пути (или возвращает None)."""
+    if not path:
+        return None
+    return os.path.basename(os.path.abspath(path))
 
 
 def main(argv=None):
     """Создаёт окно и запускает его."""
-    if argv is None:
-        argv = sys.argv[1:]
+    args = parse_args(argv)
 
-    vfs_name = _get_vfs_name(argv)
+    """Отладочный вывод параметров"""
+    print(f"[DEBUG] vfs    = {args.vfs}")
+    print(f"[DEBUG] script = {args.script}")
+
+    vfs_name = _vfs_name_from_path(args.vfs)
     shell = Shell(vfs_name=vfs_name)
-    window = MainWindow(shell)
+    window = MainWindow(shell, script_path=args.script)
     window.run()
     return 0
 
