@@ -6,10 +6,12 @@ from src.parser import ParseError, parse_line
 class Shell:
     """Логика оболочки: разбор строки, диспетчер команд."""
 
-    def __init__(self, vfs_name=None):
+    def __init__(self, vfs=None, vfs_name=None):
         """
+        :param vfs: объект Vfs (или None, если VFS не загружена).
         :param vfs_name: имя VFS для отображения в заголовке окна.
         """
+        self.vfs = vfs
         self.vfs_name = vfs_name
         self.should_exit = False
 
@@ -29,12 +31,21 @@ class Shell:
             self.should_exit = True
             return None
 
+        if cmd == "vfs-info":
+            return self.cmd_vfs_info(args)
+
         if cmd == "ls":
             return self.cmd_ls(args)
         if cmd == "cd":
             return self.cmd_cd(args)
 
         return f"error: unknown command: {cmd}"
+
+    def cmd_vfs_info(self, args):
+        """Служебная команда: информация о загруженной VFS."""
+        if self.vfs is None:
+            return "error: VFS not loaded"
+        return self.vfs.info()
 
     def cmd_ls(self, args):
         """Заглушка: печатает имя команды и аргументы."""

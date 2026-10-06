@@ -1,0 +1,12 @@
+vfs-info
+
+ls
+ls dir1
+ls "file.txt"
+ls "par1" "par2" "par3"
+
+cd
+cd dir1
+
+abracadabra
+ls "unterminated

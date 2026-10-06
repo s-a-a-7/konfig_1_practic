@@ -4,4 +4,4 @@ REM Окно должно открыться с заголовком "VFS: none"
 REM автоматически проиграть скрипт и закрыться по exit.
 
 echo === test --script only (no vfs) ===
-python -m src.app --script tests\demo_script.txt
+python -m src.app --script tests\start_script.txt

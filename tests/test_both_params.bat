@@ -4,4 +4,4 @@ REM Заголовок "VFS: some_vfs", автоматический проиг�
 
 cd /d "%~dp0\.."
 echo === test --vfs and --script together ===
-python -m src.app --vfs C:\temp\some_vfs --script tests\demo_script.txt
+python -m src.app --vfs C:\temp\some_vfs --script tests\start_script.txt

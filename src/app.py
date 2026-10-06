@@ -1,19 +1,11 @@
 """Точка входа приложения."""
 
-import os
 import sys
 
 from src.commands import Shell
 from src.config import parse_args
 from src.gui import MainWindow
-
-
-def _vfs_name_from_path(path):
-    """Извлекает имя VFS из пути (или возвращает None)."""
-    if not path:
-        return None
-    return os.path.basename(os.path.abspath(path))
-
+from src.vfs import Vfs, VfsError
 
 def main(argv=None):
     """Создаёт окно и запускает его."""
@@ -23,8 +15,17 @@ def main(argv=None):
     print(f"[DEBUG] vfs    = {args.vfs}")
     print(f"[DEBUG] script = {args.script}")
 
-    vfs_name = _vfs_name_from_path(args.vfs)
-    shell = Shell(vfs_name=vfs_name)
+    vfs = None
+    vfs_name = None
+    if args.vfs:
+        try:
+            vfs = Vfs.from_directory(args.vfs)
+            vfs_name = vfs.name
+        except VfsError as exc:
+            print(f"[VFS ERROR] {exc}", file=sys.stderr)
+            vfs_name = None
+
+    shell = Shell(vfs=vfs, vfs_name=vfs_name)
     window = MainWindow(shell, script_path=args.script)
     window.run()
     return 0
