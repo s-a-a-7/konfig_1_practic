@@ -1,10 +1,12 @@
-"""Обработка команд эмулятора (этап 1: только заглушки)."""
+"""Обработка команд эмулятора"""
 
 from src.parser import ParseError, parse_line
-
+from src.vfs import VfsError
 
 class Shell:
     """Логика оболочки: разбор строки, диспетчер команд."""
+
+    _VFS_COMMANDS = frozenset({"ls", "cd", "tac", "tail"})
 
     def __init__(self, vfs=None, vfs_name=None):
         """
@@ -13,13 +15,11 @@ class Shell:
         """
         self.vfs = vfs
         self.vfs_name = vfs_name
+        self.cwd = "/"
         self.should_exit = False
 
     def execute(self, line):
-        """Выполняет одну строку, возвращает текст ответа.
-
-        :returns: строка для отображения или None, если ответа нет.
-        """
+        """Выполняет одну строку, возвращает текст ответа."""
         try:
             cmd, args = parse_line(line)
         except ParseError as exc:
@@ -33,11 +33,17 @@ class Shell:
 
         if cmd == "vfs-info":
             return self.cmd_vfs_info(args)
+        if cmd in self._VFS_COMMANDS and self.vfs is None:
+            return "error: VFS not loaded"
 
         if cmd == "ls":
             return self.cmd_ls(args)
         if cmd == "cd":
             return self.cmd_cd(args)
+        if cmd == "tac":
+            return self.cmd_tac(args)
+        if cmd == "tail":
+            return self.cmd_tail(args)
 
         return f"error: unknown command: {cmd}"
 
@@ -48,15 +54,81 @@ class Shell:
         return self.vfs.info()
 
     def cmd_ls(self, args):
-        """Заглушка: печатает имя команды и аргументы."""
-        return self._stub("ls", args)
+        """Показывает содержимое директории."""
+        path = args[0] if args else "."
+        if not self.vfs.exists(self.cwd, path):
+            return f"error: no such file or directory: {path}"
+        if not self.vfs.is_dir(self.cwd, path):
+            return f"error: not a directory: {path}"
+        names = self.vfs.list_dir(self.cwd, path)
+        return "\n".join(names) if names else ""
 
     def cmd_cd(self, args):
-        """Заглушка: печатает имя команды и аргументы."""
-        return self._stub("cd", args)
-    @staticmethod
-    def _stub(name, args):
-        """Формирует ответ заглушки: имя команды и её аргументы."""
-        if args:
-            return f"{name}: args={args}"
-        return f"{name}: no args"
+        """Переходит в другую директорию."""
+        if not args:
+            self.cwd = "/"
+            return None
+        path = args[0]
+        if not self.vfs.exists(self.cwd, path):
+            return f"error: no such file or directory: {path}"
+        if not self.vfs.is_dir(self.cwd, path):
+            return f"error: not a directory: {path}"
+        self.cwd = self.vfs.resolve(self.cwd, path)
+        return None
+
+    def cmd_tac(self, args):
+        """Выводит содержимое файла в обратном порядке строк."""
+        if not args:
+            return "error: tac: missing operand"
+        path = args[0]
+        if not self.vfs.exists(self.cwd, path):
+            return f"error: no such file or directory: {path}"
+        if not self.vfs.is_file(self.cwd, path):
+            return f"error: is a directory: {path}"
+        try:
+            lines = self.vfs.read_file(self.cwd, path)
+        except VfsError as exc:
+            return f"error: {exc}"
+        return "\n".join(reversed(lines))
+
+    def cmd_tail(self, args):
+        """Выводит последние N строк файла (по умолчанию 10)."""
+        n = 10
+        files = []
+        i = 0
+        while i < len(args):
+            if args[i] == "-n" and i + 1 < len(args):
+                try:
+                    n = int(args[i + 1])
+                except ValueError:
+                    return f"error: invalid number: {args[i + 1]}"
+                i += 2
+            else:
+                files.append(args[i])
+                i += 1
+
+        if not files:
+            return "error: tail: missing operand"
+
+        out = []
+        for name in files:
+            if not self.vfs.exists(self.cwd, name):
+                out.append(f"error: no such file or directory: {name}")
+                continue
+            if not self.vfs.is_file(self.cwd, name):
+                out.append(f"error: is a directory: {name}")
+                continue
+            try:
+                lines = self.vfs.read_file(self.cwd, name)
+            except VfsError as exc:
+                out.append(f"error: {exc}")
+                continue
+            out.extend(lines[-n:] if n > 0 else [])
+        return "\n".join(out)
+
+    # @staticmethod
+    # def _stub(name, args):
+    #     """Формирует ответ заглушки: имя команды и её аргументы."""
+    #     if args:
+    #         return f"{name}: args={args}"
+    #     return f"{name}: no args"

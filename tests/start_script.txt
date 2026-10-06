@@ -2,11 +2,34 @@ vfs-info
 
 ls
 ls dir1
-ls "file.txt"
-ls "par1" "par2" "par3"
+ls dir1/dir2
+ls a.txt
+ls nonexistent
 
 cd
 cd dir1
+ls
+cd dir2
+ls
+cd ..
+ls
+cd ..
+ls
+cd dir1/one.txt
+cd a.txt
+cd nonexistent
 
-abracadabra
-ls "unterminated
+tac multi.txt
+tac a.txt
+tac dir1
+tac
+tac missing.txt
+
+tail multi.txt
+tail -n 2 multi.txt
+tail -n 3 multi.txt
+tail -n 1 a.txt
+tail a.txt
+tail dir1
+tail
+tail missing.txt
