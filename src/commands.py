@@ -6,7 +6,7 @@ from src.vfs import VfsError
 class Shell:
     """Логика оболочки: разбор строки, диспетчер команд."""
 
-    _VFS_COMMANDS = frozenset({"ls", "cd", "tac", "tail"})
+    _VFS_COMMANDS = frozenset({"ls", "cd", "tac", "tail", "rm", "mv"})
 
     def __init__(self, vfs=None, vfs_name=None):
         """
@@ -44,6 +44,10 @@ class Shell:
             return self.cmd_tac(args)
         if cmd == "tail":
             return self.cmd_tail(args)
+        if cmd == "rm":
+            return self.cmd_rm(args)
+        if cmd == "mv":
+            return self.cmd_mv(args)
 
         return f"error: unknown command: {cmd}"
 
@@ -126,9 +130,24 @@ class Shell:
             out.extend(lines[-n:] if n > 0 else [])
         return "\n".join(out)
 
-    # @staticmethod
-    # def _stub(name, args):
-    #     """Формирует ответ заглушки: имя команды и её аргументы."""
-    #     if args:
-    #         return f"{name}: args={args}"
-    #     return f"{name}: no args"
+    def cmd_rm(self, args):
+        """Удаляет файлы и/или директории из VFS."""
+        if not args:
+            return "error: rm: missing operand"
+        out = []
+        for path in args:
+            try:
+                self.vfs.remove(self.cwd, path)
+            except VfsError as exc:
+                out.append(f"error: {exc}")
+        return "\n".join(out) if out else None
+
+    def cmd_mv(self, args):
+        """Перемещает или переименовывает файл/директорию."""
+        if len(args) != 2:
+            return "error: mv: usage: mv SRC DST"
+        try:
+            self.vfs.move(self.cwd, args[0], args[1])
+        except VfsError as exc:
+            return f"error: {exc}"
+        return None

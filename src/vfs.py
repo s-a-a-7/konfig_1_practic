@@ -115,3 +115,34 @@ class Vfs:
         if target not in self.data:
             raise VfsError(f"no such file: {path}")
         return self.data[target].splitlines()
+
+    def remove(self, cwd, path):
+        """Удаляет файл или директорию (рекурсивно) из VFS."""
+        target = self.resolve(cwd, path).lstrip("/")
+        if not target:
+            raise VfsError("cannot remove root")
+        prefix = target + "/"
+        keys = [k for k in self.data if k == target or k.startswith(prefix)]
+        if not keys:
+            raise VfsError(f"no such file or directory: {path}")
+        for k in keys:
+            del self.data[k]
+
+    def move(self, cwd, src, dst):
+        """Перемещает файл или директорию внутри VFS."""
+        src_abs = self.resolve(cwd, src).lstrip("/")
+        dst_abs = self.resolve(cwd, dst).lstrip("/")
+        if not src_abs:
+            raise VfsError("cannot move root")
+        if not dst_abs:
+            raise VfsError("cannot move to root")
+
+        prefix = src_abs + "/"
+        keys = [k for k in self.data if k == src_abs or k.startswith(prefix)]
+        if not keys:
+            raise VfsError(f"no such file or directory: {src}")
+
+        for k in keys:
+            suffix = k[len(src_abs):]
+            new_key = dst_abs + suffix
+            self.data[new_key] = self.data.pop(k)

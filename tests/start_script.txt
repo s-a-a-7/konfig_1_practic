@@ -1,35 +1,32 @@
 vfs-info
 
 ls
-ls dir1
-ls dir1/dir2
-ls a.txt
-ls nonexistent
 
-cd
-cd dir1
+mv a.txt renamed.txt
 ls
-cd dir2
-ls
-cd ..
-ls
-cd ..
-ls
-cd dir1/one.txt
-cd a.txt
-cd nonexistent
+tac renamed.txt
 
-tac multi.txt
-tac a.txt
-tac dir1
-tac
-tac missing.txt
+mv dir1 dir_moved
+ls
+ls dir_moved
+tac dir_moved/one.txt
 
-tail multi.txt
-tail -n 2 multi.txt
-tail -n 3 multi.txt
-tail -n 1 a.txt
-tail a.txt
-tail dir1
-tail
-tail missing.txt
+mv b.txt dir_moved/
+ls dir_moved
+
+mv renamed.txt dir_moved/renamed_final.txt
+ls dir_moved
+
+rm renamed.txt
+rm dir_moved/renamed_final.txt
+ls dir_moved
+
+rm dir_moved
+ls
+
+rm
+rm missing.txt
+
+mv
+mv only_one_arg
+mv missing.txt somewhere.txt
