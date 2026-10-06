@@ -11,7 +11,6 @@ def main(argv=None):
     """Создаёт окно и запускает его."""
     args = parse_args(argv)
 
-    """Отладочный вывод параметров"""
     print(f"[DEBUG] vfs    = {args.vfs}")
     print(f"[DEBUG] script = {args.script}")
 
